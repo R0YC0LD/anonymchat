@@ -1,20 +1,164 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anonim Sohbet</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonim Sohbet</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+    <!-- Firebase App (modüler SDK) -->
+    <script type="module">
+        // Firebase SDK modüllerini import ediyoruz
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics.js';
+        import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js';
+
+        // Firebase yapılandırma bilgileri
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxeWahEBGPPet8Njx8__seZI4Db1zfTrM",
+            authDomain: "anonimsohbet-1da2c.firebaseapp.com",
+            projectId: "anonimsohbet-1da2c",
+            storageBucket: "anonimsohbet-1da2c.firebasestorage.app",
+            messagingSenderId: "245517121514",
+            appId: "1:245517121514:web:2eb071591516d0afe62493",
+            measurementId: "G-TDDVKHHVK8"
+        };
+
+        // Firebase'i başlat
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        // Veritabanı ile etkileşim (mesajları almak için)
+        const messagesRef = ref(database, 'messages/');
+        onValue(messagesRef, (snapshot) => {
+            const data = snapshot.val();
+            console.log(data);
+        });
+    </script>
+
+    <!-- CSS -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .chat-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 10px;
+        }
+
+        .chat-box {
+            width: 100%;
+            max-width: 600px;
+            height: 80%;
+            background-color: white;
+            border-radius: 10px;
+            overflow-y: auto;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .chat-message {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .chat-message .user {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .chat-message .message {
+            background-color: #e1e1e1;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .input-container input {
+            width: 85%;
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .input-container button {
+            width: 10%;
+            padding: 10px;
+            border-radius: 20px;
+            background-color: #5c6bc0;
+            color: white;
+            border: none;
+        }
+    </style>
 </head>
 <body>
-  <div class="chat-container">
-    <h1>Anonim Sohbet</h1>
-    <div id="messages" class="messages"></div>
-    <input type="text" id="username" placeholder="Kullanıcı Adı" class="input">
-    <textarea id="message" placeholder="Mesajınızı yazın..." class="input"></textarea>
-    <button id="sendBtn" class="btn">Gönder</button>
-  </div>
 
-  <script type="module" src="script.js"></script>
+    <div class="chat-container">
+        <div class="chat-box" id="chat-box">
+            <!-- Mesajlar buraya eklenecek -->
+        </div>
+
+        <div class="input-container">
+            <input type="text" id="message-input" placeholder="Mesajınızı yazın...">
+            <button id="send-button">Gönder</button>
+        </div>
+    </div>
+
+    <script>
+        // Mesaj gönderme işlemi
+        const sendButton = document.getElementById('send-button');
+        const messageInput = document.getElementById('message-input');
+        const chatBox = document.getElementById('chat-box');
+
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value;
+            if (message) {
+                const userName = "Kullanıcı"; // Bu kısmı dinamik yapabilirsiniz, örneğin kullanıcı girişi ile
+
+                // Firebase'e mesaj gönderme
+                const messagesRef = ref(getDatabase(), 'messages/' + Date.now());
+                set(messagesRef, {
+                    user: userName,
+                    message: message
+                });
+
+                // Mesajı arayüze ekle
+                chatBox.innerHTML += `<div class="chat-message"><span class="user">${userName}:</span><span class="message">${message}</span></div>`;
+                messageInput.value = ''; // Input'u temizle
+            }
+        });
+
+        // Firebase'den gelen mesajları gösterme
+        const messagesRef = ref(getDatabase(), 'messages/');
+        onValue(messagesRef, (snapshot) => {
+            const data = snapshot.val();
+            chatBox.innerHTML = ''; // Önceki mesajları temizle
+            for (const key in data) {
+                const msg = data[key];
+                chatBox.innerHTML += `<div class="chat-message"><span class="user">${msg.user}:</span><span class="message">${msg.message}</span></div>`;
+            }
+        });
+    </script>
+
 </body>
 </html>
