@@ -64,3 +64,38 @@ onChildAdded(messagesRef, function(snapshot) {
   messagesContainer.appendChild(messageElement);
   messagesContainer.scrollTop = messagesContainer.scrollHeight; // En son mesaja kaydır
 });
+// Mesaj gönderme işlemi
+const sendButton = document.getElementById('send-button');
+const messageInput = document.getElementById('message-input');
+const userNameInput = document.getElementById('user-name-input'); // Kullanıcı adını ekledim
+const chatBox = document.getElementById('chat-box');
+
+sendButton.addEventListener('click', () => {
+    const message = messageInput.value;
+    const userName = userNameInput.value || "Anonim"; // Eğer kullanıcı adı girilmemişse "Anonim" olacak
+
+    if (message && userName) {
+        // Firebase'e mesaj gönderme
+        const messagesRef = ref(getDatabase(), 'messages/' + Date.now()); // Her mesaj için benzersiz bir anahtar
+        set(messagesRef, {
+            user: userName,
+            message: message
+        });
+
+        // Mesajı arayüze ekle
+        chatBox.innerHTML += `<div class="chat-message"><span class="user">${userName}:</span><span class="message">${message}</span></div>`;
+        messageInput.value = ''; // Input'u temizle
+        userNameInput.value = ''; // Kullanıcı adı inputunu temizle
+    }
+});
+
+// Firebase'den gelen mesajları gösterme
+const messagesRef = ref(getDatabase(), 'messages/');
+onValue(messagesRef, (snapshot) => {
+    const data = snapshot.val();
+    chatBox.innerHTML = ''; // Önceki mesajları temizle
+    for (const key in data) {
+        const msg = data[key];
+        chatBox.innerHTML += `<div class="chat-message"><span class="user">${msg.user}:</span><span class="message">${msg.message}</span></div>`;
+    }
+});
